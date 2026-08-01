@@ -27,6 +27,7 @@ export default function App() {
   const [deviceStatus, setDeviceStatus] = useState(null);
   const [recentEvents, setRecentEvents] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [latestRfid, setLatestRfid] = useState(null);
   
   // Mobile UI States
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -178,25 +179,65 @@ export default function App() {
         fetchAlerts();
       }
 
-      if (msg.type === 'FACE_RECOGNIZED' || msg.type === 'RFID_SCANNED' || msg.type === 'UNKNOWN_FACE') {
-        // Add to recent events feed
-        setRecentEvents(prev => [{
-          id: msg.log.id || Date.now(),
-          detection_type: msg.type === 'UNKNOWN_FACE' ? 'Unknown Person' : (msg.type === 'FACE_RECOGNIZED' ? 'Face Recognized' : 'RFID Scanned'),
-          zone_name: 'ESP32 Access Point',
-          timestamp: msg.log.timestamp,
-          is_recognized: msg.type !== 'UNKNOWN_FACE',
-          person_name: msg.log.person_name,
-          media_path: msg.log.image_path || null
-        }, ...prev.slice(0, 9)]);
+      if (msg.type === 'RFID_SCANNED') {
+        const scanData = msg.scan || msg.log || {};
+        const isMatch = Boolean(scanData.match !== undefined ? scanData.match : scanData.is_recognized);
+        const cardId = scanData.cardId || scanData.uid || 'Unknown';
+        const name = scanData.name || scanData.person_name || (isMatch ? 'Authorized User' : 'Unknown Card');
+        const ts = scanData.timestamp || new Date().toISOString();
 
-        if (msg.type === 'UNKNOWN_FACE') {
+        setLatestRfid({
+          match: isMatch,
+          name: name,
+          cardId: cardId,
+          timestamp: ts
+        });
+
+        const detectionText = isMatch ? `RFID Granted: ${name} (${cardId})` : `RFID Denied: ${cardId}`;
+        setRecentEvents(prev => [{
+          id: msg.log?.id || Date.now(),
+          detection_type: detectionText,
+          zone_name: 'ESP32 Access Point',
+          timestamp: ts,
+          is_recognized: isMatch ? 1 : 0,
+          person_name: name,
+          media_path: null
+        }, ...(prev || []).slice(0, 9)]);
+
+        if (!isMatch) {
           setActiveIntrusion(true);
           setActiveIntrusionDetails({
-            timestamp: msg.log.timestamp,
+            timestamp: ts,
+            detection_type: `Unauthorized RFID Card (${cardId})`,
+            zone_name: 'ESP32 Gate Access Point',
+            media_path: null
+          });
+          playBuzzer();
+        }
+      }
+
+      if (msg.type === 'FACE_RECOGNIZED' || msg.type === 'UNKNOWN_FACE') {
+        const logData = msg.log || {};
+        const ts = logData.timestamp || new Date().toISOString();
+        const isRecognized = msg.type !== 'UNKNOWN_FACE';
+
+        setRecentEvents(prev => [{
+          id: logData.id || Date.now(),
+          detection_type: isRecognized ? 'Face Recognized' : 'Unknown Person',
+          zone_name: 'ESP32 Access Point',
+          timestamp: ts,
+          is_recognized: isRecognized ? 1 : 0,
+          person_name: logData.person_name || 'Visitor',
+          media_path: logData.image_path || null
+        }, ...(prev || []).slice(0, 9)]);
+
+        if (!isRecognized) {
+          setActiveIntrusion(true);
+          setActiveIntrusionDetails({
+            timestamp: ts,
             detection_type: 'Unknown Face Detected',
             zone_name: 'ESP32 Camera Node',
-            media_path: msg.log.image_path
+            media_path: logData.image_path || null
           });
           playBuzzer();
         }
@@ -618,6 +659,7 @@ void sendHeartbeat() {
                   deviceStatus={deviceStatus} 
                   recentEvents={recentEvents} 
                   alerts={alerts}
+                  latestRfid={latestRfid}
                   token={token}
                   fetchDeviceStatus={fetchDeviceStatus}
                   online={online}

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Shield, ShieldOff, Battery, Wifi, Clock, AlertTriangle, CheckCircle, 
-  ArrowRight, Radio, BellRing, Smartphone, Play
+  ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard
 } from 'lucide-react';
 import { API_URL } from '../config';
 
 
-export default function Dashboard({ deviceStatus, recentEvents, alerts, token, fetchDeviceStatus, online }) {
+export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRfid, token, fetchDeviceStatus, online }) {
   const [toggleLoading, setToggleLoading] = useState(false);
 
   const handleArmToggle = async () => {
@@ -130,23 +130,37 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, token, f
           </div>
         </div>
 
-        {/* Heartbeat Status Card */}
+        {/* RFID Scanner Status Card */}
         <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Last Heartbeat</span>
-            <Clock className={`w-6 h-6 ${(online && deviceStatus?.is_armed === 1) ? 'text-farm-400' : 'text-red-500'}`} />
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>
+            <CreditCard className={`w-5 h-5 ${latestRfid?.match ? 'text-farm-400' : latestRfid ? 'text-red-500' : 'text-security-500'}`} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white mb-1 truncate">
-              {(online && deviceStatus?.is_armed === 1) ? (deviceStatus?.last_heartbeat ? new Date(deviceStatus.last_heartbeat).toLocaleTimeString() : 'Never') : 'Never'}
-            </h3>
-            <span className="text-xs text-security-400">
-              {(online && deviceStatus?.is_armed === 1) ? 'Device sending telemetry' : 'Heartbeat disabled (Disarmed/Offline)'}
-            </span>
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${(online && deviceStatus?.is_armed === 1) ? 'bg-farm-400 animate-ping' : 'bg-red-500'}`}></span>
-              <span className="text-[10px] text-security-300 font-semibold">{(online && deviceStatus?.is_armed === 1) ? 'Connected' : 'Disconnected'}</span>
-            </div>
+            {latestRfid && latestRfid.cardId ? (
+              <div className={`p-3 rounded-lg border flex flex-col gap-1 ${
+                latestRfid.match ? 'bg-farm-950/50 border-farm-500/40 text-farm-300' : 'bg-red-950/50 border-red-500/40 text-red-300'
+              }`}>
+                <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-1.5">
+                  {latestRfid.match ? '✅ Permission Granted' : '❌ Access Denied'}
+                </div>
+                <div className="text-sm font-bold text-white truncate">
+                  {latestRfid.name || (latestRfid.match ? 'Authorized User' : 'Unknown Card')}
+                </div>
+                <div className="text-[10px] font-mono text-security-300 mt-0.5">
+                  Card ID: <span className="font-bold text-white">{latestRfid.cardId}</span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-sm font-bold text-white mb-1">No Scans Logged</h3>
+                <p className="text-xs text-security-400">Scan RFID card on ESP32 reader</p>
+                <div className="flex items-center gap-1.5 mt-3">
+                  <span className="w-2 h-2 rounded-full bg-farm-400 animate-ping"></span>
+                  <span className="text-[10px] text-security-300 font-semibold uppercase">Scanner Ready</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
