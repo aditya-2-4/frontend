@@ -162,6 +162,14 @@ export default function App() {
       try {
         const msg = JSON.parse(event.data);
   
+        if (msg.type === 'AI_DETECTION_UPDATE') {
+          window.dispatchEvent(new CustomEvent('ai-detection-update', { detail: msg }));
+        }
+
+        if (msg.type === 'CAMERA_FRAME' && msg.frame) {
+          window.dispatchEvent(new CustomEvent('camera-frame', { detail: msg.frame }));
+        }
+
         if (msg.type === 'STATUS_UPDATE' || msg.type === 'DEVICE_HEARTBEAT') {
         if (msg.device) setDeviceStatus(msg.device);
         if (msg.recentEvents) setRecentEvents(msg.recentEvents);
