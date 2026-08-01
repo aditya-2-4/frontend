@@ -68,11 +68,15 @@ export default function App() {
   const fetchDeviceStatus = async () => {
     try {
       const res = await fetch(`${API_URL}/api/device/status`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.ok) {
         const data = await res.json();
-        setDeviceStatus(data);
+        const dev = (data && data.device) ? data.device : data;
+        setDeviceStatus(dev);
+        if (dev && dev.battery_level !== undefined && Number(dev.battery_level) <= 20) {
+          speakLowBatteryAlarm();
+        }
       }
     } catch (err) {
       console.error('Error fetching device status:', err);
@@ -140,6 +144,19 @@ export default function App() {
     } catch (e) {
       console.error('Web Audio API blocked:', e);
     }
+  };
+
+  const speakLowBatteryAlarm = () => {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance("Charge the battery! Battery low!");
+        msg.rate = 1.0;
+        msg.pitch = 1.2;
+        window.speechSynthesis.speak(msg);
+      }
+    } catch (e) {}
+    playBuzzer();
   };
 
   const connectWebSocket = () => {

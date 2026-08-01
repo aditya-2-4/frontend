@@ -82,7 +82,7 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
         {/* Battery Level Card */}
         <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Solar Power / Battery</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Battery Status</span>
             <Battery className={`w-6 h-6 ${online ? getBatteryColor(deviceStatus?.battery_level || 0) : 'text-security-600'}`} />
           </div>
           <div>
@@ -91,12 +91,14 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
             </h3>
             <div className="w-full bg-security-800 h-2 rounded-full overflow-hidden">
               <div 
-                className={`h-full transition-all duration-500 ${online ? 'bg-farm-500' : 'bg-security-700'}`}
+                className={`h-full transition-all duration-500 ${
+                  !online ? 'bg-security-700' : (deviceStatus?.battery_level || 0) <= 20 ? 'bg-red-500 animate-pulse' : 'bg-farm-500'
+                }`}
                 style={{ width: `${online ? (deviceStatus?.battery_level || 0) : 0}%` }}
               ></div>
             </div>
-            <p className="text-[10px] text-security-400 mt-2 font-medium">
-              {online ? 'Solar charging active (12.4V)' : 'Device disconnected'}
+            <p className={`text-[10px] mt-2 font-medium ${online && (deviceStatus?.battery_level || 0) <= 20 ? 'text-red-400 font-extrabold animate-pulse' : 'text-security-400'}`}>
+              {online ? ((deviceStatus?.battery_level || 0) <= 20 ? '⚠️ CHARGE THE BATTERY (Discharged)' : '14.8V Battery System (Active)') : 'Device disconnected'}
             </p>
           </div>
         </div>
