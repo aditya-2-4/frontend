@@ -45,17 +45,23 @@ export default function App() {
   const wsRef = useRef(null);
   const audioContextRef = useRef(null);
 
-  // Load baseline data on login
+  // Load baseline data on login and poll periodically
   useEffect(() => {
     if (token) {
       fetchDeviceStatus();
       fetchRecentEvents();
       fetchAlerts();
       connectWebSocket();
+
+      const pollTimer = setInterval(() => {
+        fetchDeviceStatus();
+      }, 10000);
+
+      return () => {
+        clearInterval(pollTimer);
+        if (wsRef.current) wsRef.current.close();
+      };
     }
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
   }, [token]);
 
   const fetchDeviceStatus = async () => {
@@ -355,9 +361,18 @@ void sendHeartbeat() {
   }, []);
 
   const isDeviceOnline = () => {
-    if (!deviceStatus?.last_heartbeat) return false;
-    const heartbeatTime = new Date(deviceStatus.last_heartbeat).getTime();
-    return (currentTime - heartbeatTime) < 60000;
+    if (!deviceStatus) return false;
+    if (deviceStatus.is_online !== undefined) return Boolean(deviceStatus.is_online);
+    if (deviceStatus.isOnline !== undefined) return Boolean(deviceStatus.isOnline);
+    if (deviceStatus.online !== undefined) return Boolean(deviceStatus.online);
+    if (deviceStatus.status) return deviceStatus.status === 'online';
+    if (deviceStatus.last_heartbeat) {
+      const heartbeatTime = new Date(deviceStatus.last_heartbeat).getTime();
+      if (!isNaN(heartbeatTime) && heartbeatTime > 0) {
+        return (currentTime - heartbeatTime) < 600000; // 10 minutes tolerance
+      }
+    }
+    return true;
   };
   const online = isDeviceOnline();
 
