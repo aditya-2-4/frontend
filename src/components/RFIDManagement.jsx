@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, CreditCard, CheckCircle, XCircle } from 'lucide-react';
 import { API_URL } from '../config';
 
-export default function RFIDManagement({ token }) {
+export default function RFIDManagement({ token, latestRfid }) {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -36,6 +36,8 @@ export default function RFIDManagement({ token }) {
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegistering(true);
+    const cleanUid = String(uid).replace(/[:\s-]/g, '').toUpperCase();
+
     try {
       const res = await fetch(`${API_URL}/api/rfid/register`, {
         method: 'POST',
@@ -43,7 +45,7 @@ export default function RFIDManagement({ token }) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ uid, user_name: userName })
+        body: JSON.stringify({ uid: cleanUid, user_name: userName })
       });
       if (res.ok) {
         setShowAddModal(false);
@@ -51,10 +53,12 @@ export default function RFIDManagement({ token }) {
         setUserName('');
         fetchCards();
       } else {
-        alert('Failed to register RFID card. UID must be unique.');
+        const errData = await res.json();
+        alert(errData.error || 'Failed to register RFID card.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error while registering RFID card.');
     } finally {
       setRegistering(false);
     }
@@ -93,6 +97,31 @@ export default function RFIDManagement({ token }) {
           <span>Register New Card</span>
         </button>
       </div>
+
+      {latestRfid && latestRfid.cardId && (
+        <div className="mb-6 p-4 rounded-xl border border-emerald-500/40 bg-emerald-950/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg backdrop-blur">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-900/60 text-emerald-400 rounded-full">
+              <CreditCard size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">Scanned Hardware Card Detected</div>
+              <div className="text-lg font-bold text-white font-mono">
+                Card ID: <span className="text-emerald-300">{latestRfid.cardId}</span>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setUid(latestRfid.cardId);
+              setShowAddModal(true);
+            }}
+            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus size={16} /> Register {latestRfid.cardId} Now
+          </button>
+        </div>
+      )}
 
       <div className="bg-[#121a14] rounded-xl border border-gray-800 shadow-xl flex-1 overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#0a100d]">

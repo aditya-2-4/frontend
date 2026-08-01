@@ -667,7 +667,7 @@ void sendHeartbeat() {
               )}
               {activeTab === 'liveView' && <LiveView token={token} deviceStatus={deviceStatus} />}
               {activeTab === 'faces' && <FaceManagement token={token} />}
-              {activeTab === 'rfid' && <RFIDManagement token={token} />}
+              {activeTab === 'rfid' && <RFIDManagement token={token} latestRfid={latestRfid} />}
               {activeTab === 'events' && <EventLog token={token} />}
               {activeTab === 'alerts' && <AlertLog token={token} alerts={alerts} fetchAlerts={fetchAlerts} />}
               {activeTab === 'livestockMap' && <LivestockMap token={token} />}
