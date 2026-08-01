@@ -134,33 +134,21 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
         <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>
-            <CreditCard className={`w-5 h-5 ${online ? (latestRfid?.match ? 'text-farm-400' : latestRfid ? 'text-red-500' : 'text-security-400') : 'text-security-600'}`} />
+            <CreditCard className={`w-5 h-5 ${latestRfid?.cardId ? (latestRfid.match ? 'text-farm-400' : 'text-red-500') : 'text-security-500'}`} />
           </div>
           <div>
-            {!online ? (
-              <div className="p-3.5 rounded-xl border border-security-800 bg-security-950/80 flex flex-col gap-1">
-                <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2 text-security-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-security-600"></span>
-                  <span>📡 SCANNER OFFLINE</span>
-                </div>
-                <div className="text-sm font-bold text-security-300">
-                  Hardware Disconnected
-                </div>
-                <div className="text-[11px] font-mono text-security-500">
-                  Connect ESP32 reader to scan cards
-                </div>
-              </div>
-            ) : latestRfid && latestRfid.cardId ? (
-              <div className={`p-3 rounded-lg border flex flex-col gap-1 ${
-                latestRfid.match ? 'bg-farm-950/50 border-farm-500/40 text-farm-300' : 'bg-red-950/50 border-red-500/40 text-red-300'
+            {latestRfid && latestRfid.cardId ? (
+              <div className={`p-4 rounded-xl border flex flex-col gap-1.5 ${
+                latestRfid.match ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-red-950/40 border-red-500/40 text-red-300'
               }`}>
-                <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-1.5">
-                  {latestRfid.match ? '✅ Permission Granted' : '❌ Access Denied'}
+                <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${latestRfid.match ? 'bg-emerald-400' : 'bg-red-400'} animate-ping`}></span>
+                  <span>{latestRfid.match ? '✅ PERMISSION GRANTED' : '❌ ACCESS DENIED'}</span>
                 </div>
-                <div className="text-sm font-bold text-white truncate">
+                <div className="text-base font-extrabold text-white truncate">
                   {latestRfid.name || (latestRfid.match ? 'Authorized User' : 'Unknown Card')}
                 </div>
-                <div className="text-[10px] font-mono text-security-300 mt-0.5">
+                <div className="text-xs font-mono text-gray-400">
                   Card ID: <span className="font-bold text-white">{latestRfid.cardId}</span>
                 </div>
               </div>
@@ -169,8 +157,8 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
                 <h3 className="text-sm font-bold text-white mb-1">No Scans Logged</h3>
                 <p className="text-xs text-security-400">Scan RFID card on ESP32 reader</p>
                 <div className="flex items-center gap-1.5 mt-3">
-                  <span className="w-2 h-2 rounded-full bg-farm-400 animate-ping"></span>
-                  <span className="text-[10px] text-security-300 font-semibold uppercase">Scanner Ready</span>
+                  <span className="w-2 h-2 rounded-full bg-security-500"></span>
+                  <span className="text-[10px] text-security-400 font-semibold uppercase">Scanner Standby</span>
                 </div>
               </div>
             )}
