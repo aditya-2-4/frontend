@@ -130,14 +130,14 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
           </div>
         </div>
 
-        {/* RFID Scanner Status Card */}
-        <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>
-            <CreditCard className={`w-5 h-5 ${latestRfid?.cardId ? (latestRfid.match ? 'text-farm-400' : 'text-red-500') : 'text-security-500'}`} />
-          </div>
-          <div>
-            {latestRfid && latestRfid.cardId ? (
+        {/* RFID Scanner Status Card — Only rendered when a live RFID scan exists and device is online */}
+        {latestRfid && latestRfid.cardId && online && (
+          <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>
+              <CreditCard className={`w-5 h-5 ${latestRfid.match ? 'text-farm-400' : 'text-red-500'}`} />
+            </div>
+            <div>
               <div className={`p-4 rounded-xl border flex flex-col gap-1.5 ${
                 latestRfid.match ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-red-950/40 border-red-500/40 text-red-300'
               }`}>
@@ -152,18 +152,9 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
                   Card ID: <span className="font-bold text-white">{latestRfid.cardId}</span>
                 </div>
               </div>
-            ) : (
-              <div>
-                <h3 className="text-sm font-bold text-white mb-1">No Scans Logged</h3>
-                <p className="text-xs text-security-400">Scan RFID card on ESP32 reader</p>
-                <div className="flex items-center gap-1.5 mt-3">
-                  <span className="w-2 h-2 rounded-full bg-security-500"></span>
-                  <span className="text-[10px] text-security-400 font-semibold uppercase">Scanner Standby</span>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 
