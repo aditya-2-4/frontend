@@ -280,6 +280,36 @@ export default function LiveView({ token, deviceStatus }) {
           )}
         </div>
 
+        {/* Real-time Bounding Box Overlay for AI Detections */}
+        {!streamError && hasLoadedFrame && aiDetections.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+            {aiDetections.map((det, idx) => {
+              const bbox = det.bbox || [0.15, 0.1, 0.85, 0.9];
+              const left = `${(bbox[0] * 100).toFixed(1)}%`;
+              const top = `${(bbox[1] * 100).toFixed(1)}%`;
+              const width = `${((bbox[2] - bbox[0]) * 100).toFixed(1)}%`;
+              const height = `${((bbox[3] - bbox[1]) * 100).toFixed(1)}%`;
+
+              return (
+                <div 
+                  key={idx} 
+                  className="absolute border-2 border-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(52,211,153,0.5)] transition-all duration-300 rounded-lg flex flex-col justify-between"
+                  style={{ left, top, width, height }}
+                >
+                  <div className="bg-emerald-500 text-black font-extrabold text-[11px] px-2 py-0.5 rounded-t-md w-max shadow-md uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-black animate-ping"></span>
+                    <span>{det.label || 'Person'} ({(det.confidence ? det.confidence * 100 : 96).toFixed(0)}%)</span>
+                  </div>
+                  <div className="p-1 flex justify-between text-[9px] font-mono text-emerald-300 font-bold opacity-80">
+                    <span>AI TARGET LOCK</span>
+                    <span>ZONE-01</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* HUD Overlay */}
         {!streamError && (
           <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
