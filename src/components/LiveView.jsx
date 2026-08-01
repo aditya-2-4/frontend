@@ -54,8 +54,13 @@ export default function LiveView({ token, deviceStatus }) {
     };
 
     const handleAiUpdate = (e) => {
-      if (e.detail && Array.isArray(e.detail.detections)) {
-        setAiDetections(e.detail.detections);
+      if (e.detail) {
+        if (Array.isArray(e.detail.detections)) {
+          setAiDetections(e.detail.detections);
+        }
+        if (e.detail.annotated_url && imgRef.current) {
+          imgRef.current.src = e.detail.annotated_url;
+        }
       }
     };
 
@@ -271,9 +276,9 @@ export default function LiveView({ token, deviceStatus }) {
           {aiDetections.length > 0 && (
             <div className="flex flex-col gap-1.5 max-w-xs">
               {aiDetections.map((det, idx) => (
-                <div key={idx} className="bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 px-3 py-1.5 rounded-md text-xs font-extrabold shadow-lg flex items-center gap-2 backdrop-blur animate-pulse">
+                <div key={idx} className="bg-emerald-950/95 text-emerald-300 border border-emerald-500/80 px-3 py-1.5 rounded-md text-xs font-extrabold shadow-xl flex items-center gap-2 backdrop-blur animate-pulse">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                  <span>{det.label || 'Object Detected'} ({(det.confidence ? det.confidence * 100 : 92).toFixed(0)}%)</span>
+                  <span>{det.label} ({det.confidence_percentage || `${(det.confidence * 100).toFixed(0)}%`})</span>
                 </div>
               ))}
             </div>
@@ -298,10 +303,10 @@ export default function LiveView({ token, deviceStatus }) {
                 >
                   <div className="bg-emerald-500 text-black font-extrabold text-[11px] px-2 py-0.5 rounded-t-md w-max shadow-md uppercase tracking-wider flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-black animate-ping"></span>
-                    <span>{det.label || 'Person'} ({(det.confidence ? det.confidence * 100 : 96).toFixed(0)}%)</span>
+                    <span>{det.label} ({det.confidence_percentage || `${(det.confidence * 100).toFixed(0)}%`})</span>
                   </div>
                   <div className="p-1 flex justify-between text-[9px] font-mono text-emerald-300 font-bold opacity-80">
-                    <span>AI TARGET LOCK</span>
+                    <span>HUGGINGFACE YOLO AI</span>
                     <span>ZONE-01</span>
                   </div>
                 </div>
