@@ -132,8 +132,8 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
           </div>
         </div>
 
-        {/* RFID Scanner Status Card — Only rendered when a live RFID scan exists and device is online */}
-        {latestRfid && latestRfid.cardId && online && (
+        {/* RFID Scanner Status Card — Rendered whenever an RFID scan exists */}
+        {latestRfid && latestRfid.cardId && (
           <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>

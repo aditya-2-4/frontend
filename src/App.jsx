@@ -25,9 +25,21 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [deviceStatus, setDeviceStatus] = useState(null);
-  const [recentEvents, setRecentEvents] = useState([]);
-  const [alerts, setAlerts] = useState([]);
-  const [latestRfid, setLatestRfid] = useState(null);
+  const [latestRfid, setLatestRfid] = useState(() => {
+    const saved = localStorage.getItem('farmguard_latest_rfid');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.cardId) return parsed;
+      } catch (e) {}
+    }
+    return {
+      match: true,
+      name: 'Aditya Mishra (Farm Owner)',
+      cardId: '9A49D55',
+      timestamp: new Date().toISOString()
+    };
+  });
   
   // Mobile UI States
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
