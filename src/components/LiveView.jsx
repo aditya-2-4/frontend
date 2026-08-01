@@ -17,23 +17,26 @@ export default function LiveView({ token, deviceStatus }) {
   const [blobUrl, setBlobUrl] = useState('');
   
   // Reconnect logic
+  const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   const extractIp = (url) => {
     try {
-      const match = url.match(/:\/\/([^\/:]+)/);
-      return match ? match[1] : url;
+      if (!url) return '10.129.157.170';
+      const cleanUrl = String(url).split(',')[0].trim();
+      const match = cleanUrl.match(/:\/\/([^\/:]+)/);
+      return match ? match[1] : cleanUrl;
     } catch {
-      return url;
+      return '10.129.157.170';
     }
   };
 
   const [ipInput, setIpInput] = useState(() => extractIp(streamUrl));
 
   useEffect(() => {
-    // Attempt to connect to stream when URL changes or retry occurs
     setStreamError(false);
-    setIsStreaming(true); // Optimistic UI
+    setIsStreaming(true);
+    let lastFrameReceived = Date.now();
     
     // Listen for WebSocket proxied frames from App.jsx
     const handleFrame = (e) => {
@@ -43,28 +46,45 @@ export default function LiveView({ token, deviceStatus }) {
         }
         imgRef.current.src = e.detail;
         imgRef.current.dataset.blobUrl = e.detail;
-      }
-      if (!isStreaming) {
+        setHasLoadedFrame(true);
         setIsStreaming(true);
         setStreamError(false);
+        lastFrameReceived = Date.now();
       }
     };
 
     window.addEventListener('camera-frame', handleFrame);
 
+    // Fallback Snapshot HTTP poller if WS binary stream is quiet
+    const pollInterval = setInterval(async () => {
+      if (Date.now() - lastFrameReceived > 2500) {
+        try {
+          const snapshotUrl = `${API_URL}/api/camera/snapshot?t=${Date.now()}`;
+          if (imgRef.current) {
+            imgRef.current.src = snapshotUrl;
+            setHasLoadedFrame(true);
+            setIsStreaming(true);
+            setStreamError(false);
+          }
+        } catch (err) {}
+      }
+    }, 2000);
+
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener('camera-frame', handleFrame);
     };
   }, [streamUrl, retryCount]);
 
-
-
   const handleStreamError = () => {
-    setIsStreaming(false);
-    setStreamError(true);
+    if (!hasLoadedFrame) {
+      setIsStreaming(false);
+      setStreamError(true);
+    }
   };
 
   const handleStreamLoad = () => {
+    setHasLoadedFrame(true);
     setIsStreaming(true);
     setStreamError(false);
   };
@@ -158,6 +178,7 @@ export default function LiveView({ token, deviceStatus }) {
         ref={containerRef}
         className="relative bg-black rounded-xl overflow-hidden border border-[#1a241c] shadow-2xl aspect-video w-full flex items-center justify-center"
       >
+        {/* Stream Disconnected View */}
         {!isStreaming && streamError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050a06] z-0">
             <Camera className="w-16 h-16 text-gray-700 mb-4" />
@@ -173,7 +194,7 @@ export default function LiveView({ token, deviceStatus }) {
         )}
 
         {/* Stream Initializing / Connecting Loader */}
-        {!streamError && (
+        {!streamError && !hasLoadedFrame && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050a06] z-0">
             <Camera className="w-12 h-12 text-emerald-500 mb-3 animate-pulse" />
             <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Connecting Camera Stream...</h4>
@@ -183,16 +204,15 @@ export default function LiveView({ token, deviceStatus }) {
 
         <img 
           ref={imgRef}
-          src=""
           onError={handleStreamError}
           onLoad={handleStreamLoad}
           alt=""
-          className="w-full h-full object-contain relative z-1"
+          className="w-full h-full object-contain relative z-10"
           style={{ 
             transform: `scale(${zoomLevel})`,
             transformOrigin: 'center center',
             transition: 'transform 0.2s ease-in-out',
-            display: streamError ? 'none' : 'block'
+            display: (streamError || !hasLoadedFrame) ? 'none' : 'block'
           }}
         />
 
