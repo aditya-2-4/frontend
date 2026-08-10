@@ -132,6 +132,34 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
           </div>
         </div>
 
+        {/* Last Heartbeat Status Card */}
+        <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Last Heartbeat</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${online ? 'bg-farm-400 animate-pulse' : 'bg-red-500'}`}></span>
+              <span className={`text-[11px] font-bold uppercase tracking-wider ${online ? 'text-farm-400' : 'text-red-400'}`}>
+                {online ? 'ONLINE' : 'OFFLINE'}
+              </span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white mb-1 truncate">
+              {deviceStatus?.last_heartbeat 
+                ? new Date(deviceStatus.last_heartbeat).toLocaleTimeString() 
+                : (deviceStatus?.lastHeartbeat ? new Date(deviceStatus.lastHeartbeat).toLocaleTimeString() : (online ? 'Active' : 'No Data'))}
+            </h3>
+            <p className="text-xs text-security-300 font-mono mt-1">
+              {deviceStatus?.last_heartbeat 
+                ? new Date(deviceStatus.last_heartbeat).toLocaleDateString() 
+                : (deviceStatus?.lastHeartbeat ? new Date(deviceStatus.lastHeartbeat).toLocaleDateString() : new Date().toLocaleDateString())}
+            </p>
+            <p className="text-[10px] text-security-400 mt-2 font-medium">
+              {online ? 'ESP32 Device Node connected (10s interval)' : 'Heartbeat lost > 120s'}
+            </p>
+          </div>
+        </div>
+
         {/* RFID Scanner Status Card — Rendered whenever an RFID scan exists */}
         {latestRfid && latestRfid.cardId && (
           <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
