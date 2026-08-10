@@ -16,7 +16,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!.*\\.apk$).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

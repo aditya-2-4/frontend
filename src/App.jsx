@@ -25,6 +25,8 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [deviceStatus, setDeviceStatus] = useState(null);
+  const [recentEvents, setRecentEvents] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [latestRfid, setLatestRfid] = useState(() => {
     const saved = localStorage.getItem('farmguard_latest_rfid');
     if (saved) {
