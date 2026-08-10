@@ -35,12 +35,7 @@ export default function App() {
         if (parsed && parsed.cardId) return parsed;
       } catch (e) {}
     }
-    return {
-      match: true,
-      name: 'Aditya Mishra (Farm Owner)',
-      cardId: '9A49D55',
-      timestamp: new Date().toISOString()
-    };
+    return null;
   });
   
   // Mobile UI States
@@ -66,11 +61,13 @@ export default function App() {
       fetchDeviceStatus();
       fetchRecentEvents();
       fetchAlerts();
+      fetchLatestRfid();
       connectWebSocket();
 
       const pollTimer = setInterval(() => {
         fetchDeviceStatus();
-      }, 10000);
+        fetchLatestRfid();
+      }, 3000);
 
       return () => {
         clearInterval(pollTimer);
@@ -78,6 +75,19 @@ export default function App() {
       };
     }
   }, [token]);
+
+  const fetchLatestRfid = async () => {
+    try {
+      const res = await fetch(`${API_URL}/rfid/latest`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.cardId) {
+          setLatestRfid(data);
+          localStorage.setItem('farmguard_latest_rfid', JSON.stringify(data));
+        }
+      }
+    } catch (e) {}
+  };
 
   const fetchDeviceStatus = async () => {
     try {
