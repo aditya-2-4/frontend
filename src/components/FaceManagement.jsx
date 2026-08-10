@@ -21,13 +21,42 @@ export default function FaceManagement({ token }) {
 
   const fetchFaces = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/faces`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFaces(data);
-      }
+      let list = [];
+      try {
+        const res = await fetch(`${API_URL}/api/faces`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const data = await res.json();
+          list = Array.isArray(data) ? data : (data.people || []);
+        }
+      } catch (e) {}
+
+      // Merge with /api/faces/list to ensure portal-enrolled faces are displayed
+      try {
+        const listRes = await fetch(`${API_URL}/api/faces/list?api_key=secure_esp32_device_shared_api_key_2026`);
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          const enrolledPeople = listData.people || [];
+          const existingNames = new Set(list.map(f => f.name));
+
+          enrolledPeople.forEach(p => {
+            if (p && p.name && !existingNames.has(p.name)) {
+              list.push({
+                id: p.name,
+                name: p.name,
+                employee_id: 'ENROLLED',
+                department: 'Face Portal',
+                face_encoding_id: `${(p.images || []).length} Samples`,
+                status: 'Active',
+                registered_at: new Date().toISOString()
+              });
+            }
+          });
+        }
+      } catch (e) {}
+
+      setFaces(list);
     } catch (err) {
       console.error('Error fetching faces:', err);
     } finally {
@@ -157,7 +186,7 @@ export default function FaceManagement({ token }) {
                           <Edit2 size={18} />
                         </button>
                         <button 
-                          onClick={() => handleDelete(face.id)}
+                          onClick={() => handleDelete(face.name || face.id)}
                           className="text-gray-500 hover:text-red-400 transition-colors p-1" title="Delete">
                           <Trash2 size={18} />
                         </button>
