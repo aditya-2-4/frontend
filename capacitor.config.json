@@ -1,5 +1,9 @@
 {
   "appId": "com.farmguard.app",
   "appName": "FarmGuard",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://backend-8-yt04.onrender.com",
+    "cleartext": true
+  }
 }

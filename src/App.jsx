@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, Camera, Database, Bell, Map, Users, Settings as SettingsIcon, 
-  LogOut, LogIn, AlertTriangle, Radio, Wifi, Battery, Menu, X, Plus, Key, Link2, Copy, Check
+  LogOut, LogIn, AlertTriangle, Radio, Wifi, Battery, Menu, X, Plus, Key, Link2, Copy, Check,
+  Sparkles, Download, QrCode, UserCheck
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import LiveView from './components/LiveView';
@@ -27,6 +27,7 @@ export default function App() {
   const [deviceStatus, setDeviceStatus] = useState(null);
   const [recentEvents, setRecentEvents] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [unlockStatus, setUnlockStatus] = useState({ face: { granted: false }, rfid: { granted: false } });
   const [latestRfid, setLatestRfid] = useState(() => {
     const saved = localStorage.getItem('farmguard_latest_rfid');
     if (saved) {
@@ -47,6 +48,7 @@ export default function App() {
   
   // ESP32 Interactive Connect Modal States
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(true);
   const [wifiSsid, setWifiSsid] = useState('MyFarmWifi_2G');
   const [wifiPassword, setWifiPassword] = useState('FarmPassSecure2026');
   const [customServerIp, setCustomServerIp] = useState(window.location.hostname || '192.168.1.100');
@@ -62,6 +64,7 @@ export default function App() {
       fetchRecentEvents();
       fetchAlerts();
       fetchLatestRfid();
+      fetchUnlockStatus();
       connectWebSocket();
 
       const pollTimer = setInterval(() => {
@@ -76,6 +79,19 @@ export default function App() {
     }
   }, [token]);
 
+  useEffect(() => {
+    setShowUpdateModal(true);
+  }, []);
+
+  const fetchUnlockStatus = async () => {
+    try {
+      const res = await fetch(${API_URL}/api/device/unlock-status);
+      if (res.ok) {
+        const data = await res.json();
+        setUnlockStatus(data);
+      }
+    } catch (e) {}
+  };
   const fetchLatestRfid = async () => {
     try {
       const res = await fetch(`${API_URL}/rfid/latest`);
@@ -216,6 +232,18 @@ export default function App() {
         if (msg.recentEvents) setRecentEvents(msg.recentEvents);
       }
 
+      if (msg.type === 'FACE_UNLOCK_GRANTED') {
+        setUnlockStatus(prev => ({ ...prev, face: { granted: true, name: msg.name, expiresAt: msg.expiresAt } }));
+      }
+      if (msg.type === 'FACE_UNLOCK_EXPIRED') {
+        setUnlockStatus(prev => ({ ...prev, face: { granted: false, name: null, expiresAt: null } }));
+      }
+      if (msg.type === 'RFID_UNLOCK_GRANTED') {
+        setUnlockStatus(prev => ({ ...prev, rfid: { granted: true, name: msg.name, cardId: msg.cardId, expiresAt: msg.expiresAt } }));
+      }
+      if (msg.type === 'RFID_UNLOCK_EXPIRED') {
+        setUnlockStatus(prev => ({ ...prev, rfid: { granted: false, name: null, cardId: null, expiresAt: null } }));
+      }
       if (msg.type === 'NEW_EVENT') {
         setRecentEvents(prev => [msg.event, ...prev.slice(0, 9)]);
       }
@@ -306,6 +334,11 @@ export default function App() {
 
       if (msg.type === 'ALERT_RESENT') {
         setAlerts(prev => [msg.alert, ...prev]);
+      }
+
+      if (msg.type === 'SYSTEM_UPDATE_AVAILABLE') {
+        setShowUpdateModal(true);
+        try { playBuzzer(); } catch(e){}
       }
     } catch (err) {
       console.error('WebSocket parsing error:', err);
@@ -468,7 +501,19 @@ void sendHeartbeat() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-security-950 p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-security-950 p-4 relative">
+        
+        {/* Top Floating Release Badge */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowUpdateModal(true)}
+            className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/60 animate-bounce"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
+            <span>🚀 New System Update v2.5.0 Available! Click to view</span>
+          </button>
+        </div>
+
         <div className="w-full max-w-md bg-security-900 border border-farm-800/40 rounded-xl p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col items-center mb-8">
             <div className="p-4 bg-farm-900/60 rounded-full border border-farm-500/30 mb-3 shadow-inner">
@@ -518,7 +563,108 @@ void sendHeartbeat() {
               <span>Access Control Center</span>
             </button>
           </form>
+
+          {/* Quick Login Hint */}
+          <div className="mt-6 pt-4 border-t border-security-800 text-center">
+            <p className="text-[11px] text-security-400">Default Demo Credentials: <strong className="text-emerald-400 font-mono">asmin</strong> / <strong className="text-emerald-400 font-mono">asmin123</strong></p>
+          </div>
         </div>
+
+        {/* SYSTEM UPDATE MODAL ON LOGIN SCREEN */}
+        {showUpdateModal && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 z-[99999] animate-fade-in overflow-y-auto">
+            <div className="bg-security-900 border-2 border-emerald-500/50 rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative my-8 text-left">
+              
+              <button 
+                onClick={() => {
+                  setShowUpdateModal(false);
+                  localStorage.setItem('farmguard_update_v250_seen', 'true');
+                }}
+                className="absolute top-4 right-4 text-security-400 hover:text-white p-2 rounded-xl bg-security-950/60 border border-security-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-400">
+                  <Sparkles className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      NEW SYSTEM RELEASE v2.5.0
+                    </span>
+                    <span className="text-security-400 text-xs font-mono font-semibold">Official Upgrade</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    FarmGuard Biometric & AI System Update
+                  </h2>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-security-300 leading-relaxed border-b border-security-800 pb-4">
+                Your FarmGuard App has been upgraded with mobile camera face enrollment, ESP32-CAM AI face recognition action triggers, public cloud links, and an enhanced Face Management hub!
+              </p>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5"><Camera className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">📱 Mobile Camera Live Face Enrollment</h4>
+                    <p className="text-xs text-security-400 mt-0.5">Open mobile camera directly in the app to capture face snapshots with glowing oval alignment reticle, multi-pose capture (*Straight*, *Left*, *Right*), shutter flash animation, and profile enrollment.</p>
+                  </div>
+                </div>
+
+                <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5"><Shield className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">🤖 ESP32-CAM Human & Face Recognition Action</h4>
+                    <p className="text-xs text-security-400 mt-0.5">When a human appears in front of ESP32-CAM, AI recognizes enrolled personnel (*e.g., Aditya Mishra*) to trigger welcome unlock beeps. Unknown intruders trigger security siren alarm & photo logging.</p>
+                  </div>
+                </div>
+
+                <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5"><Radio className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">🌐 Public Cloud Links (No Localhost Required)</h4>
+                    <p className="text-xs text-security-400 mt-0.5">All backend APIs, WebSockets, and AI services communicate over public HTTPS links (<span className="font-mono text-emerald-400">https://backend-8-yt04.onrender.com</span>). Includes standalone public face enrollment portal.</p>
+                  </div>
+                </div>
+
+                <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5"><Users className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">🎛️ Biometric Face Hub & Unknown Intruder Log</h4>
+                    <p className="text-xs text-security-400 mt-0.5">View enrolled roster with face photo thumbnails, test live recognition from your mobile camera, and convert unknown intruder photos into authorized personnel with 1-click enrollment.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-security-800 flex flex-col sm:flex-row gap-3">
+                <a
+                  href={`${API_URL}/download-apk`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-[#16271c] hover:bg-[#1f3727] border border-emerald-600/60 text-emerald-300 font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md text-center"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Android APK (`FarmGuard_App.apk`)</span>
+                </a>
+
+                <button
+                  onClick={() => {
+                    setShowUpdateModal(false);
+                    localStorage.setItem('farmguard_update_v250_seen', 'true');
+                  }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/40"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Continue to Login Screen</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -668,6 +814,16 @@ void sendHeartbeat() {
                 )}
               </div>
 
+              {/* System Update Release Badge Button */}
+              <button
+                onClick={() => setShowUpdateModal(true)}
+                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
+                title="View Release Notes"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
+                <span className="hidden sm:inline">System Updated v2.5.0</span>
+              </button>
+
               {/* Plus Icon to connect ESP32 */}
               <button
                 onClick={() => setShowConnectModal(true)}
@@ -704,7 +860,7 @@ void sendHeartbeat() {
             {/* Wrapped Content */}
             <div className={`transition-all duration-500 h-full ${!online && activeTab !== 'dashboard' ? 'opacity-10 pointer-events-none grayscale' : ''}`}>
               {activeTab === 'dashboard' && (
-                <Dashboard 
+                <Dashboard unlockStatus={unlockStatus} 
                   deviceStatus={deviceStatus} 
                   recentEvents={recentEvents} 
                   alerts={alerts}
@@ -729,10 +885,11 @@ void sendHeartbeat() {
       </div>
 
       {/* Mobile Bottom Bar */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 bg-security-900 border-t border-security-800 flex items-center justify-around py-2.5 px-4 z-45">
+      <div className="md:hidden fixed bottom-0 inset-x-0 bg-security-900 border-t border-security-800 flex items-center justify-around py-2.5 px-2 z-45 shadow-2xl">
         {[
           { id: 'dashboard', label: 'Status', icon: Shield },
-          { id: 'liveView', label: 'Live', icon: Camera },
+          { id: 'faces', label: 'Face Portal', icon: UserCheck },
+          { id: 'liveView', label: 'Live Cam', icon: Camera },
           { id: 'events', label: 'Events', icon: Database },
           { id: 'livestockMap', label: 'Map', icon: Map }
         ].map(item => {
@@ -742,9 +899,9 @@ void sendHeartbeat() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className="flex flex-col items-center justify-center gap-1 text-center"
+              className="flex flex-col items-center justify-center gap-0.5 text-center flex-1 py-1"
             >
-              <Icon className={`w-5.5 h-5.5 ${isActive ? 'text-farm-400 animate-pulse' : 'text-security-400'}`} />
+              <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-400 font-bold scale-110' : 'text-security-400'}`} />
               <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-security-500'}`}>
                 {item.label}
               </span>
@@ -753,9 +910,9 @@ void sendHeartbeat() {
         })}
         <button
           onClick={() => setMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 text-center"
+          className="flex flex-col items-center justify-center gap-0.5 text-center flex-1 py-1"
         >
-          <Menu className="w-5.5 h-5.5 text-security-400" />
+          <Menu className="w-5 h-5 text-security-400" />
           <span className="text-[9px] font-bold uppercase tracking-wider text-security-500">More</span>
         </button>
       </div>
@@ -856,6 +1013,138 @@ void sendHeartbeat() {
                 Done
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SYSTEM UPDATE RELEASE POPUP MODAL */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 z-[99999] animate-fade-in overflow-y-auto">
+          <div className="bg-security-900 border-2 border-emerald-500/50 rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative my-8 text-left">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                setShowUpdateModal(false);
+                localStorage.setItem('farmguard_update_v250_seen', 'true');
+              }}
+              className="absolute top-4 right-4 text-security-400 hover:text-white p-2 rounded-xl bg-security-950/60 border border-security-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header Badge & Title */}
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-400">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    NEW SYSTEM RELEASE v2.5.0
+                  </span>
+                  <span className="text-security-400 text-xs font-mono font-semibold">Official Upgrade</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                  FarmGuard Biometric & AI System Update
+                </h2>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-security-300 leading-relaxed border-b border-security-800 pb-4">
+              Your FarmGuard App has been upgraded with mobile camera face enrollment, ESP32-CAM AI face recognition action triggers, public cloud links, and an enhanced Face Management hub!
+            </p>
+
+            {/* Release Notes List */}
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              
+              {/* Feature 1 */}
+              <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                    📱 Mobile Camera Live Face Enrollment
+                  </h4>
+                  <p className="text-xs text-security-400 mt-0.5">
+                    Open mobile camera directly in the app to capture face snapshots with glowing oval alignment reticle, multi-pose capture (*Straight*, *Left*, *Right*), shutter flash animation, and profile enrollment.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                    🤖 ESP32-CAM Human & Face Recognition Action
+                  </h4>
+                  <p className="text-xs text-security-400 mt-0.5">
+                    When a human appears in front of ESP32-CAM, AI recognizes enrolled personnel (*e.g., Aditya Mishra*) to trigger welcome unlock beeps. Unknown intruders trigger security siren alarm & photo logging.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5">
+                  <Radio className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                    🌐 Public Cloud Links (No Localhost Required)
+                  </h4>
+                  <p className="text-xs text-security-400 mt-0.5">
+                    All backend APIs, WebSockets, and AI services communicate over public HTTPS links (<span className="font-mono text-emerald-400">https://backend-8-yt04.onrender.com</span>). Includes standalone public face enrollment portal.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 4 */}
+              <div className="bg-security-950 border border-security-800 rounded-xl p-3.5 flex items-start gap-3">
+                <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0 mt-0.5">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                    🎛️ Biometric Face Hub & Unknown Intruder Log
+                  </h4>
+                  <p className="text-xs text-security-400 mt-0.5">
+                    View enrolled roster with face photo thumbnails, test live recognition from your mobile camera, and convert unknown intruder photos into authorized personnel with 1-click enrollment.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Action Buttons */}
+            <div className="pt-3 border-t border-security-800 flex flex-col sm:flex-row gap-3">
+              <a
+                href={`${API_URL}/download-apk`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-[#16271c] hover:bg-[#1f3727] border border-emerald-600/60 text-emerald-300 font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md text-center"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Android APK (`FarmGuard_App.apk`)</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  setShowUpdateModal(false);
+                  localStorage.setItem('farmguard_update_v250_seen', 'true');
+                  setActiveTab('faces');
+                }}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/40"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Explore Face Management Now</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}
