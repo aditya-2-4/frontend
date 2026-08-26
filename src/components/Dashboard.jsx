@@ -241,7 +241,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* 1. Face Recognition Unlock Status Timer */}
-          {((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Date.now() - new Date(latestOwnerEvent.timestamp).getTime() <= 600000))) && (
+          {online && ((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Date.now() - new Date(latestOwnerEvent.timestamp).getTime() <= 600000))) && (
             <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
               <div className="flex items-center justify-between mb-3">
                 <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest Face Recognized</span>
@@ -271,7 +271,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           )}
           
           {/* 2. RFID Unlock Status Timer */}
-          {((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Date.now() - new Date(latestRfid.timestamp).getTime() <= 600000))) && (
+          {online && ((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Date.now() - new Date(latestRfid.timestamp).getTime() <= 600000))) && (
             <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
               <div className="flex items-center justify-between mb-3">
                 <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest RFID Scan</span>
@@ -304,5 +304,6 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
     </div>
   );
 }
+
 
 
