@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, Camera, Database, Bell, Map, Users, Settings as SettingsIcon, 
   LogOut, LogIn, AlertTriangle, Radio, Wifi, Battery, Menu, X, Plus, Key, Link2, Copy, Check,
