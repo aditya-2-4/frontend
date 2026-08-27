@@ -241,15 +241,15 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           
           {/* 1. Face Recognition Unlock Status Timer */}
           {((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Date.now() - new Date(latestOwnerEvent.timestamp).getTime() <= 900000))) && (
-            <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
+            <div className="border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
               <div className="flex items-center justify-between mb-3">
-                <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest Face Recognized</span>
-                <UserCheck className={w-5 h-5 \} />
+                <span className="text-xs font-semibold uppercase tracking-wider">Latest Face Recognized</span>
+                <UserCheck className="w-5 h-5" />
               </div>
               <div>
-                <div className={p-4 rounded-xl border flex flex-col gap-1.5 \}>
+                <div className="p-4 rounded-xl border flex flex-col gap-1.5">
                   <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
-                    <span className={w-2.5 h-2.5 rounded-full \}></span>
+                    <span className="w-2.5 h-2.5 rounded-full"></span>
                     <span>{unlockStatus?.face?.granted || latestOwnerEvent?.is_recognized !== 0 ? 'PERMISSION GRANTED' : 'UNRECOGNIZED ENTITY'}</span>
                   </div>
                   <div className="text-base font-extrabold text-white truncate">
@@ -271,15 +271,15 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           
           {/* 2. RFID Unlock Status Timer */}
           {((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Date.now() - new Date(latestRfid.timestamp).getTime() <= 900000))) && (
-            <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
+            <div className="border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
               <div className="flex items-center justify-between mb-3">
-                <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest RFID Scan</span>
-                <CreditCard className={w-5 h-5 \} />
+                <span className="text-xs font-semibold uppercase tracking-wider">Latest RFID Scan</span>
+                <CreditCard className="w-5 h-5" />
               </div>
               <div>
-                <div className={p-4 rounded-xl border flex flex-col gap-1.5 \}>
+                <div className="p-4 rounded-xl border flex flex-col gap-1.5">
                   <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
-                    <span className={w-2.5 h-2.5 rounded-full \}></span>
+                    <span className="w-2.5 h-2.5 rounded-full"></span>
                     <span>{unlockStatus?.rfid?.granted || latestRfid?.match ? 'PERMISSION GRANTED' : 'ACCESS DENIED'}</span>
                   </div>
                   <div className="text-base font-extrabold text-white truncate">
@@ -299,7 +299,6 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
             </div>
           )}
         </div>
-      )}
     </div>
   );
 }

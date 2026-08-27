@@ -85,7 +85,7 @@ export default function App() {
 
   const fetchUnlockStatus = async () => {
     try {
-      const res = await fetch(${API_URL}/api/device/unlock-status);
+      const res = await fetch(`${API_URL}/api/device/unlock-status`);
       if (res.ok) {
         const data = await res.json();
         setUnlockStatus(data);
