@@ -49,7 +49,7 @@ export default function App() {
   
   // ESP32 Interactive Connect Modal States
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(true);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [wifiSsid, setWifiSsid] = useState('MyFarmWifi_2G');
   const [wifiPassword, setWifiPassword] = useState('FarmPassSecure2026');
   const [customServerIp, setCustomServerIp] = useState(window.location.hostname || '192.168.1.100');
@@ -79,10 +79,6 @@ export default function App() {
       };
     }
   }, [token]);
-
-  useEffect(() => {
-    setShowUpdateModal(true);
-  }, []);
 
   const fetchUnlockStatus = async () => {
     try {
