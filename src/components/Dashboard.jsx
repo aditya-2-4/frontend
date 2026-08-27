@@ -237,7 +237,8 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
       </div>
 
       {/* Live Active Access Scan Cards Container (ONLY VISIBLE WHEN DEVICE IS ONLINE) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {online && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* 1. Face Recognition Unlock Status Timer */}
           {((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Math.abs(Date.now() - new Date(latestOwnerEvent.timestamp).getTime()) <= 900000))) && (
@@ -270,7 +271,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           )}
           
           {/* 2. RFID Unlock Status Timer */}
-          {false && (
+          {((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Math.abs(Date.now() - new Date(latestRfid.timestamp).getTime()) <= 900000))) && (
             <div className="border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider">Latest RFID Scan</span>
@@ -299,6 +300,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
             </div>
           )}
         </div>
+      )}
     </div>
   );
 }
