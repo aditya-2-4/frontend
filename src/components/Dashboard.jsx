@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Shield, ShieldOff, Battery, Wifi, Clock, AlertTriangle, CheckCircle, 
-  ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard, UserCheck
+  ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard
 } from 'lucide-react';
 import { API_URL } from '../config';
 
 
-export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, alerts, latestRfid, token, fetchDeviceStatus, online }) {
+export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRfid, token, fetchDeviceStatus, online }) {
   const [toggleLoading, setToggleLoading] = useState(false);
 
   const handleArmToggle = async () => {
@@ -44,84 +44,8 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
     return date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
   };
 
-  const latestOwnerEvent = recentEvents?.find(e => 
-    e.detection_type === 'Recognized Owner' || 
-    e.detection_type === 'Face Recognized' || 
-    e.is_recognized === 1 ||
-    (e.person_name && e.person_name !== 'Visitor' && e.person_name !== 'Unknown')
-  );
-
   return (
     <div className="space-y-8">
-      {/* Top FarmGuard Security Dashboard Header Banner Card with Large Arm/Disarm Button */}
-      <div className="bg-security-900 border border-security-800 rounded-xl p-5 sm:p-6 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center font-black text-black text-lg shadow-md font-mono shrink-0">
-              FG
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                FarmGuard Security Dashboard
-              </h2>
-              <p className="text-xs text-security-400 font-medium hidden sm:block">
-                Real-time livestock security monitoring & intrusion control panel
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold tracking-wider flex items-center gap-2 border ${
-              online 
-                ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
-                : 'bg-red-950/80 border-red-500/50 text-red-400'
-            }`}>
-              <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-ping' : 'bg-red-500'}`}></span>
-              {online ? 'ONLINE' : 'OFFLINE'}
-            </span>
-          </div>
-        </div>
-
-        <div className="border-t border-security-800 pt-4">
-          <div className="bg-security-950/90 border border-security-800 p-3 sm:p-4 rounded-xl shadow-inner">
-            <button
-              onClick={handleArmToggle}
-              disabled={toggleLoading || !online}
-              className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base sm:text-lg tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl ${
-                !online
-                  ? 'bg-security-800 text-security-500 cursor-not-allowed border border-security-700'
-                  : toggleLoading
-                  ? 'bg-emerald-700 text-white cursor-wait opacity-80 animate-pulse border border-emerald-500'
-                  : deviceStatus?.is_armed === 1
-                  ? 'bg-[#10b981] hover:bg-[#059669] active:bg-[#047857] text-white shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] cursor-pointer border border-emerald-400/40'
-                  : 'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)] cursor-pointer border border-red-400/40'
-              }`}
-            >
-              {!online ? (
-                <>
-                  <ShieldOff className="w-6 h-6" />
-                  <span>DEVICE OFFLINE</span>
-                </>
-              ) : toggleLoading ? (
-                <>
-                  <Shield className="w-6 h-6 animate-spin" />
-                  <span>UPDATING SYSTEM STATE...</span>
-                </>
-              ) : deviceStatus?.is_armed === 1 ? (
-                <>
-                  <Shield className="w-6 h-6 fill-white/20" />
-                  <span>🛡 SYSTEM ARMED (CLICK TO DISARM)</span>
-                </>
-              ) : (
-                <>
-                  <ShieldOff className="w-6 h-6" />
-                  <span>🛡 SYSTEM DISARMED (CLICK TO ARM)</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Overview Status Grid Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
@@ -150,7 +74,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
                   : 'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white'
               }`}
             >
-              {!online ? 'Device Offline' : toggleLoading ? 'Updating...' : (deviceStatus?.is_armed === 1 ? 'Disarm System' : 'Arm System')}
+              {!online ? 'Device Offline' : toggleLoading ? 'Updating...' : (deviceStatus?.is_armed === 1 ? 'Device Armed' : 'Device Disarmed')}
             </button>
           </div>
         </div>
@@ -234,76 +158,175 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           </div>
         </div>
 
+        {/* RFID Scanner Status Card — Rendered whenever an RFID scan exists */}
+        {latestRfid && latestRfid.cardId && (Math.abs(Date.now() - new Date(latestRfid.timestamp).getTime()) <= 900000) && (
+          <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest RFID Scan</span>
+              <CreditCard className={`w-5 h-5 ${latestRfid.match ? 'text-farm-400' : 'text-red-500'}`} />
+            </div>
+            <div>
+              <div className={`p-4 rounded-xl border flex flex-col gap-1.5 ${
+                latestRfid.match ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-red-950/40 border-red-500/40 text-red-300'
+              }`}>
+                <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${latestRfid.match ? 'bg-emerald-400' : 'bg-red-400'} animate-ping`}></span>
+                  <span>{latestRfid.match ? '✅ PERMISSION GRANTED' : '❌ ACCESS DENIED'}</span>
+                </div>
+                <div className="text-base font-extrabold text-white truncate">
+                  {latestRfid.name || (latestRfid.match ? 'Authorized User' : 'Unknown Card')}
+                </div>
+                <div className="text-xs font-mono text-gray-400">
+                  Card ID: <span className="font-bold text-white">{latestRfid.cardId}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
-      {/* Live Active Access Scan Cards Container (ONLY VISIBLE WHEN DEVICE IS ONLINE) */}
-      {online && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* 1. Face Recognition Unlock Status Timer */}
-          {((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Math.abs(Date.now() - new Date(latestOwnerEvent.timestamp).getTime()) <= 900000))) && (
-            <div className="border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider">Latest Face Recognized</span>
-                <UserCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="p-4 rounded-xl border flex flex-col gap-1.5">
-                  <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full"></span>
-                    <span>{unlockStatus?.face?.granted || latestOwnerEvent?.is_recognized !== 0 ? 'PERMISSION GRANTED' : 'UNRECOGNIZED ENTITY'}</span>
-                  </div>
-                  <div className="text-base font-extrabold text-white truncate">
-                    {unlockStatus?.face?.granted ? (unlockStatus.face.name || "Authorized User") : (latestOwnerEvent?.person_name || 'Owner')}
-                  </div>
-                  <div className="text-xs font-mono text-gray-400 flex items-center justify-between">
-                    <span>Active Face Unlock (15m)</span>
-                    {unlockStatus?.face?.expiresAt && (
-                      <span className="text-[10px] text-emerald-400">Expires: {new Date(unlockStatus.face.expiresAt).toLocaleTimeString()}</span>
+      {/* Strict Offline/Disarmed Masking for Data Panels */}
+      <div className="relative">
+        {(!online || deviceStatus?.is_armed !== 1) && (
+          <div className="absolute inset-0 z-10 bg-security-950/70 backdrop-blur-[6px] rounded-2xl flex flex-col items-center justify-center border border-security-800">
+            <div className="bg-security-900 border border-security-700 p-6 rounded-xl shadow-2xl flex flex-col items-center max-w-sm text-center">
+              {!online ? (
+                <>
+                  <Radio className="w-10 h-10 text-red-500 mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Telemetry Offline</h3>
+                  <p className="text-xs text-security-400">All data widgets, charts, and activity logs are strictly disabled until the ESP32 gateway reconnects.</p>
+                </>
+              ) : (
+                <>
+                  <ShieldOff className="w-10 h-10 text-yellow-500 mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">System Disarmed</h3>
+                  <p className="text-xs text-security-400">Live data tracking and telemetry are hidden while the system is disarmed.</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className={`transition-all ${(!online || deviceStatus?.is_armed !== 1) ? 'opacity-30 pointer-events-none select-none filter grayscale' : ''}`}>
+          {/* Grid of recent Event Logs & Alerts logs */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Recent Security Activity Panel */}
+        <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-security-800">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Radio className="w-5 h-5 text-farm-400" />
+              <span>Recent Activity Feed</span>
+            </h3>
+            <span className="text-xs text-farm-400 font-semibold">Live updates</span>
+          </div>
+
+          <div className="space-y-4">
+            {recentEvents.slice(0, 4).map(event => (
+              <div 
+                key={event.id}
+                className={`p-4 rounded-lg flex items-center justify-between border ${
+                  event.detection_type === 'Human Detected' && event.is_recognized === 0
+                    ? 'bg-red-950/20 border-red-500/30'
+                    : 'bg-security-950/60 border-security-850'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-full ${
+                    event.detection_type === 'Human Detected' && event.is_recognized === 0
+                      ? 'bg-red-900/40 text-red-400'
+                      : event.detection_type === 'Recognized Owner'
+                      ? 'bg-farm-900/40 text-farm-400'
+                      : 'bg-security-800 text-security-400'
+                  }`}>
+                    {event.detection_type === 'Human Detected' && event.is_recognized === 0 ? (
+                      <AlertTriangle className="w-5 h-5" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5" />
                     )}
-                    {!unlockStatus?.face?.expiresAt && latestOwnerEvent?.timestamp && (
-                      <span className="text-[10px] text-security-500">{new Date(latestOwnerEvent.timestamp).toLocaleTimeString()}</span>
-                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{event.detection_type}</p>
+                    <p className="text-xs text-security-400 mt-0.5">Zone: {event.zone_name} • {formatTime(event.timestamp)}</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-          
-          {/* 2. RFID Unlock Status Timer */}
-          {((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Math.abs(Date.now() - new Date(latestRfid.timestamp).getTime()) <= 900000))) && (
-            <div className="border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider">Latest RFID Scan</span>
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="p-4 rounded-xl border flex flex-col gap-1.5">
-                  <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full"></span>
-                    <span>{unlockStatus?.rfid?.granted || latestRfid?.match ? 'PERMISSION GRANTED' : 'ACCESS DENIED'}</span>
+
+                {event.media_path && (
+                  <div className="w-12 h-12 bg-security-900 border border-security-800 rounded overflow-hidden relative shrink-0">
+                    <img 
+                      src={`${API_URL}${event.media_path}`} 
+                      alt="event thumbnail" 
+
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/45 flex items-center justify-center text-[9px] font-bold text-white">
+                      VIEW
+                    </div>
                   </div>
-                  <div className="text-base font-extrabold text-white truncate">
-                    {unlockStatus?.rfid?.granted ? (unlockStatus.rfid.name || "Authorized User") : (latestRfid?.name || (latestRfid?.match ? 'Owner' : 'Unknown Card'))}
-                  </div>
-                  <div className="text-xs font-mono text-gray-400 flex items-center justify-between">
-                    <span>Active RFID Unlock (15m)</span>
-                    {unlockStatus?.rfid?.expiresAt && (
-                      <span className="text-[10px] text-emerald-400">Expires: {new Date(unlockStatus.rfid.expiresAt).toLocaleTimeString()}</span>
-                    )}
-                    {!unlockStatus?.rfid?.expiresAt && latestRfid?.timestamp && (
-                      <span className="text-[10px] text-security-500">{new Date(latestRfid.timestamp).toLocaleTimeString()}</span>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
-            </div>
-          )}
+            ))}
+            {recentEvents.length === 0 && (
+              <div className="text-center py-10 text-security-500 text-sm">No recent events logged.</div>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Recent SMS Alerts Sent Panel */}
+        <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-security-800">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <BellRing className="w-5 h-5 text-farm-400" />
+              <span>Dispatched SMS & Push Alerts</span>
+            </h3>
+            <span className="text-xs text-security-400">Logs database</span>
+          </div>
+
+          <div className="space-y-4">
+            {alerts.slice(0, 4).map(alert => (
+              <div 
+                key={alert.id}
+                className="p-4 bg-security-950/60 border border-security-850 rounded-lg flex items-start justify-between"
+              >
+                <div className="flex gap-3">
+                  <div className="p-2.5 bg-security-800 text-security-400 rounded-full">
+                    {alert.type === 'SMS' ? (
+                      <Smartphone className="w-5 h-5 text-farm-400" />
+                    ) : (
+                      <BellRing className="w-5 h-5 text-yellow-500" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-security-400 uppercase bg-security-800 px-2 py-0.5 rounded mr-2">
+                      {alert.type}
+                    </span>
+                    <span className="text-xs text-security-400">{formatTime(alert.timestamp)}</span>
+                    <p className="text-sm font-semibold text-security-200 mt-2">{alert.message}</p>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                  alert.status === 'Delivered' 
+                    ? 'bg-farm-900/60 text-farm-300 border border-farm-800/40' 
+                    : 'bg-yellow-950/40 text-yellow-300 border border-yellow-800/30'
+                }`}>
+                  {alert.status}
+                </span>
+              </div>
+            ))}
+            {alerts.length === 0 && (
+              <div className="text-center py-10 text-security-500 text-sm">No alerts sent recently.</div>
+            )}
+          </div>
+        </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
-
 
