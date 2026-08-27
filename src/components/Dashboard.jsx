@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
 import { 
   Shield, ShieldOff, Battery, Wifi, Clock, AlertTriangle, CheckCircle, 
-  ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard
+  ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard, Camera, UserCheck
 } from 'lucide-react';
 import { API_URL } from '../config';
 
 
 export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRfid, token, fetchDeviceStatus, online }) {
   const [toggleLoading, setToggleLoading] = useState(false);
+  const [latestFace, setLatestFace] = useState(null);
+
+  useEffect(() => {
+    if (recentEvents && recentEvents.length > 0) {
+      const faceEvent = recentEvents.find(e => 
+        e.detection_type === 'Recognized Owner' || 
+        e.detection_type === 'Unknown Face Detected' ||
+        e.detection_type?.includes('Face') || 
+        e.detection_type?.includes('Recognized')
+      );
+      setLatestFace(faceEvent || null);
+    }
+  }, [recentEvents]);
 
   const handleArmToggle = async () => {
     if (toggleLoading || !deviceStatus) return;
@@ -183,6 +196,35 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
             </div>
           </div>
         )}
+
+        {/* Face Scanner Status Card - Rendered whenever a Face scan exists */}
+        {latestFace && (Math.abs(Date.now() - new Date(latestFace.timestamp).getTime()) <= 900000) && (() => {
+          const isMatch = latestFace.is_recognized === 1 || latestFace.detection_type === 'Recognized Owner';
+          return (
+            <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-security-400">Latest Face Scan</span>
+                <UserCheck className={`w-5 h-5 ${isMatch ? 'text-farm-400' : 'text-red-500'}`} />
+              </div>
+              <div>
+                <div className={`p-4 rounded-xl border flex flex-col gap-1.5 ${
+                  isMatch ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-red-950/40 border-red-500/40 text-red-300'
+                }`}>
+                  <div className="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${isMatch ? 'bg-emerald-400' : 'bg-red-400'} animate-ping`}></span>
+                    <span>{isMatch ? '✅ AUTHORIZED FACE' : '🚫 UNKNOWN FACE'}</span>
+                  </div>
+                  <div className="text-base font-extrabold text-white truncate">
+                    {isMatch ? 'Authorized Personnel' : 'Intruder / Unknown'}
+                  </div>
+                  <div className="text-xs font-mono text-gray-400">
+                    Log ID: <span className="font-bold text-white">#{latestFace.id}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
 
