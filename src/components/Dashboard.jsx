@@ -237,11 +237,10 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
       </div>
 
       {/* Live Active Access Scan Cards Container (ONLY VISIBLE WHEN DEVICE IS ONLINE) */}
-      {online && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* 1. Face Recognition Unlock Status Timer */}
-          {online && ((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Date.now() - new Date(latestOwnerEvent.timestamp).getTime() <= 600000))) && (
+          {((unlockStatus?.face?.granted && unlockStatus?.face?.expiresAt && new Date(unlockStatus.face.expiresAt).getTime() > Date.now()) || (latestOwnerEvent && (Date.now() - new Date(latestOwnerEvent.timestamp).getTime() <= 900000))) && (
             <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
               <div className="flex items-center justify-between mb-3">
                 <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest Face Recognized</span>
@@ -257,7 +256,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
                     {unlockStatus?.face?.granted ? (unlockStatus.face.name || "Authorized User") : (latestOwnerEvent?.person_name || 'Owner')}
                   </div>
                   <div className="text-xs font-mono text-gray-400 flex items-center justify-between">
-                    <span>Active Face Unlock (10m)</span>
+                    <span>Active Face Unlock (15m)</span>
                     {unlockStatus?.face?.expiresAt && (
                       <span className="text-[10px] text-emerald-400">Expires: {new Date(unlockStatus.face.expiresAt).toLocaleTimeString()}</span>
                     )}
@@ -271,7 +270,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
           )}
           
           {/* 2. RFID Unlock Status Timer */}
-          {online && ((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Date.now() - new Date(latestRfid.timestamp).getTime() <= 600000))) && (
+          {((unlockStatus?.rfid?.granted && unlockStatus?.rfid?.expiresAt && new Date(unlockStatus.rfid.expiresAt).getTime() > Date.now()) || (latestRfid && (Date.now() - new Date(latestRfid.timestamp).getTime() <= 900000))) && (
             <div className={\ border rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300}>
               <div className="flex items-center justify-between mb-3">
                 <span className={	ext-xs font-semibold uppercase tracking-wider \}>Latest RFID Scan</span>
@@ -287,7 +286,7 @@ export default function Dashboard({ unlockStatus, deviceStatus, recentEvents, al
                     {unlockStatus?.rfid?.granted ? (unlockStatus.rfid.name || "Authorized User") : (latestRfid?.name || (latestRfid?.match ? 'Owner' : 'Unknown Card'))}
                   </div>
                   <div className="text-xs font-mono text-gray-400 flex items-center justify-between">
-                    <span>Active RFID Unlock (10m)</span>
+                    <span>Active RFID Unlock (15m)</span>
                     {unlockStatus?.rfid?.expiresAt && (
                       <span className="text-[10px] text-emerald-400">Expires: {new Date(unlockStatus.rfid.expiresAt).toLocaleTimeString()}</span>
                     )}
