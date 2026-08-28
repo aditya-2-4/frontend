@@ -811,15 +811,6 @@ void sendHeartbeat() {
                 )}
               </div>
 
-              {/* System Update Release Badge Button */}
-              <button
-                onClick={() => setShowUpdateModal(true)}
-                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
-                title="View Release Notes"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
-                <span className="hidden sm:inline">System Updated v2.5.0</span>
-              </button>
 
               {/* Plus Icon to connect ESP32 */}
               <button
