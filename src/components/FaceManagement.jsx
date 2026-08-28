@@ -488,7 +488,7 @@ export default function FaceManagement({ token }) {
                 
                 <video
                       ref={videoRef}
-                      className={w-full h-full object-cover scale-x-[-1] }
+                      className={`w-full h-full object-cover scale-x-[-1] ${isCameraActive ? 'block' : 'hidden'}`}
                       autoPlay
                       playsInline
                       muted
@@ -857,7 +857,7 @@ export default function FaceManagement({ token }) {
             </p>
 
             <div className="relative w-full max-w-lg aspect-[4/3] bg-black rounded-2xl overflow-hidden border-2 border-emerald-900/80 shadow-2xl flex items-center justify-center">
-              <video ref={testVideoRef} className={w-full h-full object-cover } autoPlay playsInline muted />
+              <video ref={testVideoRef} className={`w-full h-full object-cover ${isTestCameraActive ? 'block' : 'hidden'}`} autoPlay playsInline muted />
               <canvas ref={testCanvasRef} className="hidden" />
 
               {isTestCameraActive ? (
