@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "vite build",
+    "build": "vite build && node copy_to_backend.js",
     "preview": "vite preview"
   },
   "dependencies": {
