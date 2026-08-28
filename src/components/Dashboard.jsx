@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Shield, ShieldOff, Battery, Wifi, Clock, AlertTriangle, CheckCircle, 
   ArrowRight, Radio, BellRing, Smartphone, Play, CreditCard, Camera, UserCheck
