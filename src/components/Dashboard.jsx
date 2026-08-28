@@ -198,7 +198,7 @@ export default function Dashboard({ deviceStatus, recentEvents, alerts, latestRf
         )}
 
         {/* Face Scanner Status Card - Rendered whenever a Face scan exists */}
-        {latestFace && (Math.abs(Date.now() - new Date(latestFace.timestamp).getTime()) <= 900000) && (() => {
+        {online && deviceStatus?.is_armed === 1 && latestFace && (Math.abs(Date.now() - new Date(latestFace.timestamp).getTime()) <= 900000) && (() => {
           const isMatch = latestFace.is_recognized === 1 || latestFace.detection_type === 'Recognized Owner';
           return (
             <div className="bg-security-900 border border-security-800 rounded-xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300">
