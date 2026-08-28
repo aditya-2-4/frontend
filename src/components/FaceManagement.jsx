@@ -486,16 +486,17 @@ export default function FaceManagement({ token }) {
               {/* Camera Container */}
               <div className="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden border-2 border-emerald-900/60 shadow-inner flex items-center justify-center">
                 
-                {isCameraActive ? (
-                  <>
-                    <video
+                <video
                       ref={videoRef}
-                      className="w-full h-full object-cover scale-x-[-1]"
+                      className={w-full h-full object-cover scale-x-[-1] }
                       autoPlay
                       playsInline
                       muted
                     ></video>
                     <canvas ref={canvasRef} className="hidden" />
+
+                {isCameraActive ? (
+                  <>
 
                     {/* Shutter Flash Animation */}
                     <div className={`absolute inset-0 bg-white transition-opacity duration-150 pointer-events-none ${shutterFlash ? 'opacity-90' : 'opacity-0'}`} />
@@ -547,11 +548,11 @@ export default function FaceManagement({ token }) {
                 <button
                   type="button"
                   onClick={captureSnapshot}
-                  disabled={!isCameraActive}
+                  disabled={!isCameraActive || capturedImages.length >= 6}
                   className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition-all"
                 >
                   <Camera size={18} />
-                  <span>Take Snapshot Photo ({capturedImages.length}/3)</span>
+                  <span>Take Snapshot Photo ({capturedImages.length}/6)</span>
                 </button>
               </div>
             </div>
@@ -664,7 +665,7 @@ export default function FaceManagement({ token }) {
                   <button
                     type="submit"
                     form="face-enroll-form"
-                    disabled={enrolling || capturedImages.length === 0}
+                    disabled={enrolling || capturedImages.length < 6}
                     className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm transition-all shadow-lg shadow-emerald-900/40 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {enrolling ? (
@@ -856,10 +857,11 @@ export default function FaceManagement({ token }) {
             </p>
 
             <div className="relative w-full max-w-lg aspect-[4/3] bg-black rounded-2xl overflow-hidden border-2 border-emerald-900/80 shadow-2xl flex items-center justify-center">
+              <video ref={testVideoRef} className={w-full h-full object-cover } autoPlay playsInline muted />
+              <canvas ref={testCanvasRef} className="hidden" />
+
               {isTestCameraActive ? (
                 <>
-                  <video ref={testVideoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
-                  <canvas ref={testCanvasRef} className="hidden" />
 
                   {/* Target Scanner Reticle */}
                   <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
