@@ -8,6 +8,21 @@ I'm **Aditya Chaturvedi.**, a Developer & Sketch Artist passionate about buildin
 - 📫 Reach me at: **adityachaturvedi2410@gmail.com.**
 
 ---
+### 🌐 Connect With Me
+
+<p align="left">
+  <a href="https://www.linkedin.com" target="_blank">
+    <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" />
+  </a>
+  <a href="https://www.youtube.com" target="_blank">
+    <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" />
+  </a>
+  <a href="mailto:adityachaturvedi2410@gmail.com">
+    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
+  </a>
+</p>
+
+---
 
 ### 🛠️ Skills
 
